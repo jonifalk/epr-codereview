@@ -1,4 +1,10 @@
-__author__ = "8819989, Falk, xxxxxxx, Hartmann"
+"""
+Module that contains 3 Optimizations that each use a different approach to
+give a way to quantify the optimum path through the graph given a cost and distraction value.
+Contains functions for greedy and recursive path movement.
+"""
+
+__author__ = "8819989, Falk, 8746524, Hartmann"
 __version__ = "0.3"
 
 

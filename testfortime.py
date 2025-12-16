@@ -1,4 +1,11 @@
-__author__ = "8819989, Falk, xxxxxxx, Hartmann"
+"""
+This module uses the modules in pathfinder to create a random graph.
+This graph has given number of nodes and a random number of cost and distraction values.
+It also uses the timeit functionality to measure the time it takes in ms
+to run a greedy or recursive algorithm for the given graph.
+"""
+
+__author__ = "8819989, Falk, 8746524, Hartmann"
 __version__ = "0.3"
 
 # Import Section
@@ -37,6 +44,15 @@ def generate_random_graph(num_nodes=15, probability=0.3):
 
 
 def run_timing_comparison():
+    """
+    Creates a random graph with node_count number of nodes.
+    The start node is 0.
+    To change the size of the graph: Edit the node_count, which is 15 by default.
+    Uses timeit.timeit to determine the time for each algorithm to run.
+    :Returns:
+        time greedy : average greedy
+        time recursive : average recursive
+    """
     # Setup Data
     # Keep graph small (12 nodes) because Recursive is O(N!) and explodes quickly
     node_count = 12
