@@ -7,6 +7,8 @@ Contains functions for greedy and recursive path movement.
 __author__ = "8819989, Falk, 8746524, Hartmann"
 __version__ = "0.3"
 
+import heapq as hq
+
 
 def opt_balanced_linear(cost, distraction):
     """
@@ -57,8 +59,111 @@ def opt_efficiency_ratio(cost, distraction):
     epsilon = 0.001
     return cost / (distraction + epsilon)
 
+def opt_min_cost(cost, distraction):
+    """
+    Optimization 4: Minimize Cost.
+    Focuses solely on minimizing cost.
+
+    >>> opt_min_cost(10, 5)
+    10
+    >>> opt_min_cost(5, 10)
+    5
+    """
+    return cost
+
+def opt_min_distraction(cost, distraction):
+    """
+    Optimization 5: Minimize Distraction.
+    Focuses solely on minimizing distraction.
+
+    >>> min_distraction(10, 5)
+    5
+    >>> min_distraction(5, 10)
+    10
+    """
+    return distraction
+
+def opt_balanced(cost, distraction):
+    """
+    Optimization 6: Balanced Sum.
+    Minimizes the sum of cost and distraction.
+
+    >>> opt_balanced(10, 5)
+    15
+    >>> opt_balanced(5, 10)
+    15
+    """
+    return cost + distraction
 
 # Algorithms
+
+def path_finder_dijkstra(graph, start, end, opt_func):
+    """
+    Dijkstra path finder with two edge weights: c, d
+    
+    :param graph: Beschreibung
+    :param start: Beschreibung
+    :param end: Beschreibung
+    :param opt_func: Beschreibung
+    """
+    queue = [(0, start)]  # (score, node, total_cost, total_distraction)
+    hq.heapify(queue)
+
+    scores = {node: float('inf') for node in graph}
+    previous = {node: None for node in graph}
+
+    scores[start] = 0
+
+    while queue:
+        current_score, current_node = hq.heappop(queue)
+
+        # Break when we reach the end node
+        if current_node == end:
+            break
+
+        # Skip if we have already found a better path
+        if current_score > scores[current_node]:
+            continue
+
+        for neighbor, weights in graph[current_node].items():
+            # Get edge weights to neighbor
+            c = weights['c']
+            d = weights['d']
+
+            # Calculate new score using the optimization function
+            edge_score = opt_func(c, d)
+            new_score = current_score + edge_score
+
+            # Update if better path found
+            if new_score < scores[neighbor]:
+                scores[neighbor] = new_score
+                previous[neighbor] = current_node
+                # Add the new total score and neighbor to the priority queue
+                # Total score is first element, because heapq gets
+                # sorted by the first element of a tuple
+                hq.heappush(queue, (new_score, neighbor))
+
+    # Reconstruct path
+    path = []
+    total_cost = 0
+    total_distraction = 0
+
+    current = end
+    while current is not None:
+        path.append(current)
+        prev = previous[current]
+        if prev is not None:
+            edge = graph[prev][current]
+            total_cost += edge['c']
+            total_distraction += edge['d']
+        current = prev
+
+    path.reverse()
+
+    print(f"Path found: {path} with total cost {total_cost}"
+          f" and total distraction {total_distraction}")
+    return total_cost, total_distraction, path
+
 
 def path_finder_greedy(graph, start, end, opt_func):
     """
@@ -235,11 +340,35 @@ def path_finder_recursive(graph, start, end, opt_func, path=None, current_cost=0
 
 
 if __name__ == "__main__":
-    import doctest
-
-    print("Running Doctests...")
-    results = doctest.testmod()
-    if results.failed == 0:
-        print("All doctests passed successfully!")
+    if True:
+        # Test graph with different routes for Dijkstra
+        g = {
+            'A': {'B': {'c': 1, 'd': 10}, 'E': {'c': 10, 'd': 1}},
+            'B': {'C': {'c': 1, 'd': 10}, 'F': {'c': 100, 'd': 100}},
+            'C': {'D': {'c': 1, 'd': 10}},
+            'D': {},
+            'E': {'C': {'c': 100, 'd': 100}, 'G': {'c': 10, 'd': 10}},
+            'F': {'D': {'c': 10, 'd': 1}},
+            'G': {'F': {'c': 10, 'd': 1}},
+        }
+        print("\nBalanced Linear Dijkstra:")
+        path_finder_dijkstra(g, 'A', 'D', opt_balanced_linear)
+        print("\nEfficiency Ratio Dijkstra:")
+        path_finder_dijkstra(g, 'A', 'D', opt_efficiency_ratio)
+        print("\nDistraction Focused Dijkstra:")
+        path_finder_dijkstra(g, 'A', 'D', opt_distraction_focused)
+        print("\nMin Cost Dijkstra:")
+        path_finder_dijkstra(g, 'A', 'D', opt_min_cost)
+        print("\nMin Distraction Dijkstra:")
+        path_finder_dijkstra(g, 'A', 'D', opt_min_distraction)
+        print("\nBalanced Dijkstra:")
+        path_finder_dijkstra(g, 'A', 'D', opt_balanced)
     else:
-        print(f"{results.failed} doctests failed.")
+        import doctest
+
+        print("Running Doctests...")
+        results = doctest.testmod()
+        if results.failed == 0:
+            print("All doctests passed successfully!")
+        else:
+            print(f"{results.failed} doctests failed.")
