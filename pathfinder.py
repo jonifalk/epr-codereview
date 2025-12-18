@@ -19,7 +19,7 @@ def opt_balanced_linear(cost, distraction):
     Args:
         cost (int): The cost value of the edge.
         distraction (int): The distraction value of the edge.
-    
+
     Returns:
         int: The computed score for the edge.
 
@@ -42,7 +42,7 @@ def opt_distraction_focused(cost, distraction):
     Args:
         cost (int): The cost value of the edge.
         distraction (int): The distraction value of the edge.
-    
+
     Returns:
         int: The computed score for the edge.
 
@@ -65,7 +65,7 @@ def opt_efficiency_ratio(cost, distraction):
     Args:
         cost (int): The cost value of the edge.
         distraction (int): The distraction value of the edge.
-    
+
     Returns:
         int: The computed score for the edge.
 
@@ -80,6 +80,7 @@ def opt_efficiency_ratio(cost, distraction):
     epsilon = 0.001
     return cost / (distraction + epsilon)
 
+
 def opt_min_cost(cost, distraction):
     """
     Optimization 4: Minimize Cost.
@@ -88,7 +89,7 @@ def opt_min_cost(cost, distraction):
     Args:
         cost (int): The cost value of the edge.
         distraction (int): The distraction value of the edge.
-    
+
     Returns:
         int: The computed score for the edge.
 
@@ -99,6 +100,7 @@ def opt_min_cost(cost, distraction):
     """
     return cost + 0 * distraction  # distraction has no effect
 
+
 def opt_min_distraction(cost, distraction):
     """
     Optimization 5: Minimize Distraction.
@@ -107,7 +109,7 @@ def opt_min_distraction(cost, distraction):
     Args:
         cost (int): The cost value of the edge.
         distraction (int): The distraction value of the edge.
-    
+
     Returns:
         int: The computed score for the edge.
 
@@ -118,6 +120,7 @@ def opt_min_distraction(cost, distraction):
     """
     return distraction + 0 * cost  # cost has no effect
 
+
 def opt_balanced(cost, distraction):
     """
     Optimization 6: Balanced Sum.
@@ -126,7 +129,7 @@ def opt_balanced(cost, distraction):
     Args:
         cost (int): The cost value of the edge.
         distraction (int): The distraction value of the edge.
-    
+
     Returns:
         int: The computed score for the edge.
 
@@ -138,6 +141,7 @@ def opt_balanced(cost, distraction):
     return (cost + distraction) / 2
 
 # Algorithms
+
 
 def path_finder_dijkstra(graph, start, end, opt_func):
     """
@@ -205,7 +209,7 @@ def path_finder_dijkstra(graph, start, end, opt_func):
 
             # Dijksta cannot handle negative weights
             if new_score < 0:
-                break # Results in invalid path if negative weights occur
+                break     # Results in invalid path if negative weights occur
 
             # Update if better path found
             if new_score < scores[neighbor]:
@@ -238,7 +242,7 @@ def path_finder_dijkstra(graph, start, end, opt_func):
     # Because path reconstruction always adds the end node,
     # we need to check if we actually reached the start node.
     if path[0] != start:
-        return None # No path found
+        return None     # No path found
 
     return total_cost, total_distraction, path
 
@@ -283,7 +287,8 @@ def path_finder_greedy(graph, start, end, opt_func):
         return 0, 0, [start]
 
     current_node = start
-    path = [current_node]       # Keeps track of where we have been: ['S', 'B'...]
+    # Keeps track of where we have been: ['S', 'B'...]
+    path = [current_node]
     total_cost = 0              # Accumulator for Effort
     total_distraction = 0       # Accumulator for Distraction
 
@@ -309,7 +314,8 @@ def path_finder_greedy(graph, start, end, opt_func):
         # Greedy Choice
         # Determine the best local step based on opt_func
         best_next_node = None
-        best_score = float('inf')       # Start with infinity so the first real score is lower
+        # Start with infinity so the first real score is lower
+        best_score = float('inf')
         best_edge_data = None
 
         for neighbor in valid_neighbors:
@@ -335,7 +341,8 @@ def path_finder_greedy(graph, start, end, opt_func):
             total_cost += best_edge_data['c']
             total_distraction += best_edge_data['d']
         else:
-            return None         # Should be caught by valid_neighbors check, but safety first.
+            # Should be caught by valid_neighbors check, but safety first.
+            return None
 
     return total_cost, total_distraction, path
 
