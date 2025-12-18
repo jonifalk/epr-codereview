@@ -55,8 +55,9 @@ def run_timing_comparison():
         time recursive : average recursive
     """
     # Setup Data
-    # Keep graph small (12 nodes) because Recursive is O(N!) and explodes quickly
-    node_count = 20
+    # Keep graph small (15 nodes) because Recursive will take way to long.
+    # Any Node number over 16 causes the programm to take a very long time.
+    node_count = 15
     graph = generate_random_graph(num_nodes=node_count, probability=0.4)
     start_node = '0'
     end_node = str(node_count - 1)

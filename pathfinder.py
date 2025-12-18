@@ -340,10 +340,10 @@ def path_finder_greedy(graph, start, end, opt_func):
     return total_cost, total_distraction, path
 
 
-def path_finder_recursive(graph, start, end, opt_func, path=None, current_cost=0, current_dist=0):
+def path_finder_recursive(graph, start, end, opt_func, path=None, cost=0, dist=0):
     """
-    Recursively finds the global optimum path based on
-    the opt_func applied to the TOTAL path values.
+    Finds the optimal path from start to end using recursion and backtracking.
+    Efficiency is improved by mutating a single path list rather than copying it.
 
     Args:
         graph (dict): The graph represented as an adjacency list with weights.
@@ -352,7 +352,7 @@ def path_finder_recursive(graph, start, end, opt_func, path=None, current_cost=0
         opt_func (function): The optimization function to calculate edge scores.
 
     Returns:
-        tuple: (total_effort, total_distraction, path_list)
+        tuple: (total_effort, total_distraction, path_list) or None if no path exists.
 
     >>> graph = {
     ...     'S': {'A': {'c': 1, 'd': 0}, 'B': {'c': 5, 'd': 10}},
@@ -360,72 +360,65 @@ def path_finder_recursive(graph, start, end, opt_func, path=None, current_cost=0
     ...     'B': {'E': {'c': 5, 'd': 10}},
     ...     'E': {}
     ... }
-
-    # Balanced Linear:
-    # Path via A: Cost 2, Dist 0 -> Score 2
-    # Path via B: Cost 10, Dist 20 -> Score -10 (Better)
+    >>> # Path A: Score = 2 (1+1 cost, 0+0 dist)
+    >>> # Path B: Score = -2 (5+5 cost, 10+10 dist) -> opt_balanced_linear(10, 20)
     >>> path_finder_recursive(graph, 'S', 'E', opt_balanced_linear)
     (10, 20, ['S', 'B', 'E'])
 
-    # Negative Test: No path exists
+    >>> # Negative Test: No path exists
     >>> graph_iso = {'S': {'A': {'c': 1, 'd': 1}}, 'B': {}}
     >>> path_finder_recursive(graph_iso, 'S', 'B', opt_balanced_linear) is None
     True
 
-    # Multiple paths logic check
+    >>> # Test: Start is End
     >>> path_finder_recursive(graph, 'S', 'S', opt_balanced_linear)
     (0, 0, ['S'])
     """
-    # Set up the path list (On the first call, it's empty)
+    # 1. Initialization: On the first call, create the tracking list
     if path is None:
         path = [start]
 
-    # If we reached the house (end), we stop exploring this branch.
-    # We return the totals we have accumulated so far.
+    # 2. Base Case: Destination reached
     if start == end:
-        return current_cost, current_dist, path
+        # We return a copy of the path [:] because the original list
+        # will continue to be mutated (popped) during backtracking.
+        return cost, dist, path[:]
 
-    # 3. Tracking the best path
-    # Since we might split into 3 different paths here, we need to know which
-    # of those 3 returns the best score.
     best_result = None
-    best_path_score = float('inf')      # Infinity ensures the first valid path replaces this.
+    min_score = float('inf')
 
-    # Exploration
-    if start in graph:
-        for neighbor, attr in graph[start].items():
+    # 3. Exploration: Safely get neighbors to avoid KeyErrors on leaf nodes
+    neighbors = graph.get(start, {})
 
-            # Do not go back to a node already in our current history ('path')
-            if neighbor not in path:
+    for neighbor, attr in neighbors.items():
+        # Prevent cycles (infinite loops) by checking if node is already visited
+        if neighbor not in path:
 
-                # Calculation: Add this step's cost/distraction
-                # to our running total BEFORE passing it down.
-                new_cost = current_cost + attr['c']
-                new_dist = current_dist + attr['d']
-                new_path = path + [neighbor]
+            # Backtracking Step:
+            # We modify the existing list to save memory.
+            path.append(neighbor)
 
-                # For recursion: "Pause" this function and
-                # call a fresh version of it for the neighbor.
-                # This will go all the way to the end before returning.
-                result = path_finder_recursive(graph, neighbor, end, opt_func,
-                                               new_path, new_cost, new_dist)
+            # Recursive call: Move deeper into the graph
+            result = path_finder_recursive(
+                graph, neighbor, end, opt_func,
+                path, cost + attr['c'], dist + attr['d']
+            )
 
-                # Backtracking and evaluating
-                # We are now "back" at the current node. We look at what the neighbor returned.
-                if result:
-                    r_cost, r_dist, r_path = result
+            # 4. Evaluation: If a valid path to 'end' was returned
+            if result:
+                res_cost, res_dist, _ = result
+                score = opt_func(res_cost, res_dist)
 
-                    # Apply the optimization function to the TOTAL journey returned by the child.
-                    # Note the difference: Greedy checked the edge score.
-                    # Recursive checks the total path score.
-                    score = opt_func(r_cost, r_dist)
+                # Keep track of the path with the lowest optimization score
+                if score < min_score:
+                    min_score = score
+                    best_result = result
 
-                    # If this path is better than previous neighbor paths we checked...
-                    if score < best_path_score:
-                        best_path_score = score
-                        best_result = result
+            # Backtracking Step:
+            # Remove the neighbor before trying the next branch
+            # so the 'path' list is clean for the next iteration.
+            path.pop()
 
-    # Return the single best path found among all neighbors to the node that called us.
     return best_result
 
 
