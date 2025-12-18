@@ -13,7 +13,8 @@ import timeit
 import random
 from pathfinder import path_finder_greedy as greedy
 from pathfinder import path_finder_recursive as recursive
-from pathfinder import opt_balanced_linear as optimum
+from pathfinder import path_finder_dijkstra as dijkstra
+from pathfinder import opt_balanced as optimum
 
 
 # Assuming the main logic is saved as pathfinder.py in the same directory.
@@ -55,7 +56,7 @@ def run_timing_comparison():
     """
     # Setup Data
     # Keep graph small (12 nodes) because Recursive is O(N!) and explodes quickly
-    node_count = 12
+    node_count = 20
     graph = generate_random_graph(num_nodes=node_count, probability=0.4)
     start_node = '0'
     end_node = str(node_count - 1)
@@ -65,6 +66,10 @@ def run_timing_comparison():
     # Wrapper for Greedy
     def wrapper_greedy():
         greedy(graph, start_node, end_node, optimum)
+
+    # Wrapper for Dijkstra
+    def wrapper_dijkstra():
+        dijkstra(graph, start_node, end_node, optimum)
 
     # Wrapper for Recursive
     def wrapper_recursive():
@@ -78,6 +83,10 @@ def run_timing_comparison():
     time_greedy = timeit.timeit(wrapper_greedy, number=iterations)
     avg_greedy = (time_greedy / iterations) * 1000      # to ms
 
+    # Measure Dijkstra
+    time_dijkstra = timeit.timeit(wrapper_dijkstra, number=iterations)
+    avg_dijkstra = (time_dijkstra / iterations) * 1000  # to ms
+
     # Measure Recursive:
     # Recursive is much slower, so we run fewer iterations to save user time
     rec_iterations = 10
@@ -87,6 +96,7 @@ def run_timing_comparison():
     print(f"\nResults over {iterations} iterations (Greedy) and "
           f"{rec_iterations} iterations (Recursive):")
     print(f"Greedy Average Time:    {avg_greedy:.4f} ms")
+    print(f"Dijkstra Average Time:  {avg_dijkstra:.4f} ms")
     print(f"Recursive Average Time: {avg_recursive:.4f} ms")
 
     if avg_greedy > 0:
@@ -95,6 +105,7 @@ def run_timing_comparison():
 
     # Verification of Path Quality (Single run)
     g_res = greedy(graph, start_node, end_node, optimum)
+    d_res = dijkstra(graph, start_node, end_node, optimum)
     r_res = recursive(graph, start_node, end_node, optimum)
 
     print("\n--- Quality Check (Random Sample) ---")
@@ -105,6 +116,13 @@ def run_timing_comparison():
         print(f"Greedy Path Score:    {g_score} (Cost: {g_res[0]}, Dist: {g_res[1]})")
     else:
         print("Greedy found no path.")
+
+    # Calculation of the Dijkstra score
+    if d_res:
+        d_score = optimum(d_res[0], d_res[1])
+        print(f"Dijkstra Path Score:  {d_score} (Cost: {d_res[0]}, Dist: {d_res[1]})")
+    else:
+        print("Dijkstra found no path.")
 
     # Calculation of the recursive score
     if r_res:

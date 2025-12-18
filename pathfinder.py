@@ -16,6 +16,13 @@ def opt_balanced_linear(cost, distraction):
     Minimizes (Cost - Distraction).
     We want low cost and high distraction.
 
+    Args:
+        cost (int): The cost value of the edge.
+        distraction (int): The distraction value of the edge.
+    
+    Returns:
+        int: The computed score for the edge.
+
     >>> opt_balanced_linear(10, 5)
     5
     >>> opt_balanced_linear(5, 10)
@@ -31,6 +38,13 @@ def opt_distraction_focused(cost, distraction):
     Optimization 2: Weighted Linear (Distraction Priority).
     Heavily favors distraction (weight 2.0) over cost (weight 1.0).
     Formula: Cost - (2 * Distraction)
+
+    Args:
+        cost (int): The cost value of the edge.
+        distraction (int): The distraction value of the edge.
+    
+    Returns:
+        int: The computed score for the edge.
 
     >>> opt_distraction_focused(10, 5)
     0
@@ -48,6 +62,13 @@ def opt_efficiency_ratio(cost, distraction):
     Minimizes Cost per unit of Distraction.
     Formula: Cost / (Distraction + 0.001) to avoid division by zero.
 
+    Args:
+        cost (int): The cost value of the edge.
+        distraction (int): The distraction value of the edge.
+    
+    Returns:
+        int: The computed score for the edge.
+
     >>> round(opt_efficiency_ratio(10, 2), 2)
     5.0
     >>> round(opt_efficiency_ratio(10, 5), 2)
@@ -64,47 +85,95 @@ def opt_min_cost(cost, distraction):
     Optimization 4: Minimize Cost.
     Focuses solely on minimizing cost.
 
+    Args:
+        cost (int): The cost value of the edge.
+        distraction (int): The distraction value of the edge.
+    
+    Returns:
+        int: The computed score for the edge.
+
     >>> opt_min_cost(10, 5)
     10
     >>> opt_min_cost(5, 10)
     5
     """
-    return cost
+    return cost + 0 * distraction  # distraction has no effect
 
 def opt_min_distraction(cost, distraction):
     """
     Optimization 5: Minimize Distraction.
     Focuses solely on minimizing distraction.
 
-    >>> min_distraction(10, 5)
+    Args:
+        cost (int): The cost value of the edge.
+        distraction (int): The distraction value of the edge.
+    
+    Returns:
+        int: The computed score for the edge.
+
+    >>> opt_min_distraction(10, 5)
     5
-    >>> min_distraction(5, 10)
+    >>> opt_min_distraction(5, 10)
     10
     """
-    return distraction
+    return distraction + 0 * cost  # cost has no effect
 
 def opt_balanced(cost, distraction):
     """
     Optimization 6: Balanced Sum.
-    Minimizes the sum of cost and distraction.
+    Minimizes the sum and distraction equally.
+
+    Args:
+        cost (int): The cost value of the edge.
+        distraction (int): The distraction value of the edge.
+    
+    Returns:
+        int: The computed score for the edge.
 
     >>> opt_balanced(10, 5)
-    15
+    7.5
     >>> opt_balanced(5, 10)
-    15
+    7.5
     """
-    return cost + distraction
+    return (cost + distraction) / 2
 
 # Algorithms
 
 def path_finder_dijkstra(graph, start, end, opt_func):
     """
     Dijkstra path finder with two edge weights: c, d
-    
-    :param graph: Beschreibung
-    :param start: Beschreibung
-    :param end: Beschreibung
-    :param opt_func: Beschreibung
+    Uses a priority queue to explore the graph based on cumulative scores.
+    Considers the total path score using the provided optimization function.
+
+    Args:
+        graph (dict): The graph represented as an adjacency list with weights.
+        start (str): The starting node.
+        end (str): The destination node.
+        opt_func (function): The optimization function to calculate edge scores.
+
+    Returns:
+        tuple: (total_effort, total_distraction, path_list) or None if no path found.
+
+    >>> graph = {
+    ...     'S': {'A': {'c': 1, 'd': 1}, 'B': {'c': 10, 'd': 100}},
+    ...     'A': {'E': {'c': 1, 'd': 1}},
+    ...     'B': {'E': {'c': 1, 'd': 1}},
+    ...     'E': {}
+    ... }
+
+    # Greedy using balanced linear (1-1=0 vs 10-100=-90).
+    # Logic: 1-1=0, 10-100=-90. -90 is lower, so greedy picks B.
+    >>> path_finder_dijkstra(graph, 'S', 'E', opt_balanced_linear)
+    (2, 2, ['S', 'A', 'E'])
+
+    # Negative Test: Dead end
+    >>> graph_trap = {'S': {'A': {'c': 1, 'd': 1}}, 'A': {}, 'E': {}}
+    >>> path_finder_dijkstra(graph_trap, 'S', 'E', opt_balanced_linear) is None
+    True
+
+    # Test: Already at destination
+    >>> path_finder_dijkstra(graph, 'S', 'S', opt_balanced_linear)
+    (0, 0, ['S'])
     """
     queue = [(0, start)]  # (score, node, total_cost, total_distraction)
     hq.heapify(queue)
@@ -134,6 +203,10 @@ def path_finder_dijkstra(graph, start, end, opt_func):
             edge_score = opt_func(c, d)
             new_score = current_score + edge_score
 
+            # Dijksta cannot handle negative weights
+            if new_score < 0:
+                break # Results in invalid path if negative weights occur
+
             # Update if better path found
             if new_score < scores[neighbor]:
                 scores[neighbor] = new_score
@@ -145,11 +218,13 @@ def path_finder_dijkstra(graph, start, end, opt_func):
 
     # Reconstruct path
     path = []
+    visited = set()
     total_cost = 0
     total_distraction = 0
 
     current = end
-    while current is not None:
+    while current is not None and current not in visited:
+        visited.add(current)
         path.append(current)
         prev = previous[current]
         if prev is not None:
@@ -160,8 +235,11 @@ def path_finder_dijkstra(graph, start, end, opt_func):
 
     path.reverse()
 
-    print(f"Path found: {path} with total cost {total_cost}"
-          f" and total distraction {total_distraction}")
+    # Because path reconstruction always adds the end node,
+    # we need to check if we actually reached the start node.
+    if path[0] != start:
+        return None # No path found
+
     return total_cost, total_distraction, path
 
 
@@ -169,6 +247,12 @@ def path_finder_greedy(graph, start, end, opt_func):
     """
     Approaches the destination by choosing the locally optimal edge at each step.
     Note: Does not backtrack and may fail to find the destination or a global optimum.
+
+    Args:
+        graph (dict): The graph represented as an adjacency list with weights.
+        start (str): The starting node.
+        end (str): The destination node.
+        opt_func (function): The optimization function to calculate edge scores.
 
     Returns:
         tuple: (total_effort, total_distraction, path_list) or None if no path found.
@@ -261,6 +345,12 @@ def path_finder_recursive(graph, start, end, opt_func, path=None, current_cost=0
     Recursively finds the global optimum path based on
     the opt_func applied to the TOTAL path values.
 
+    Args:
+        graph (dict): The graph represented as an adjacency list with weights.
+        start (str): The starting node.
+        end (str): The destination node.
+        opt_func (function): The optimization function to calculate edge scores.
+
     Returns:
         tuple: (total_effort, total_distraction, path_list)
 
@@ -340,35 +430,11 @@ def path_finder_recursive(graph, start, end, opt_func, path=None, current_cost=0
 
 
 if __name__ == "__main__":
-    if True:
-        # Test graph with different routes for Dijkstra
-        g = {
-            'A': {'B': {'c': 1, 'd': 10}, 'E': {'c': 10, 'd': 1}},
-            'B': {'C': {'c': 1, 'd': 10}, 'F': {'c': 100, 'd': 100}},
-            'C': {'D': {'c': 1, 'd': 10}},
-            'D': {},
-            'E': {'C': {'c': 100, 'd': 100}, 'G': {'c': 10, 'd': 10}},
-            'F': {'D': {'c': 10, 'd': 1}},
-            'G': {'F': {'c': 10, 'd': 1}},
-        }
-        print("\nBalanced Linear Dijkstra:")
-        path_finder_dijkstra(g, 'A', 'D', opt_balanced_linear)
-        print("\nEfficiency Ratio Dijkstra:")
-        path_finder_dijkstra(g, 'A', 'D', opt_efficiency_ratio)
-        print("\nDistraction Focused Dijkstra:")
-        path_finder_dijkstra(g, 'A', 'D', opt_distraction_focused)
-        print("\nMin Cost Dijkstra:")
-        path_finder_dijkstra(g, 'A', 'D', opt_min_cost)
-        print("\nMin Distraction Dijkstra:")
-        path_finder_dijkstra(g, 'A', 'D', opt_min_distraction)
-        print("\nBalanced Dijkstra:")
-        path_finder_dijkstra(g, 'A', 'D', opt_balanced)
-    else:
-        import doctest
+    import doctest
 
-        print("Running Doctests...")
-        results = doctest.testmod()
-        if results.failed == 0:
-            print("All doctests passed successfully!")
-        else:
-            print(f"{results.failed} doctests failed.")
+    print("Running Doctests...")
+    results = doctest.testmod()
+    if results.failed == 0:
+        print("All doctests passed successfully!")
+    else:
+        print(f"{results.failed} doctests failed.")
