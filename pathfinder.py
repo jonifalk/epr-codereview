@@ -1,11 +1,11 @@
 """
-Module that contains 3 Optimizations that each use a different approach to
+Module that contains 6 Optimizations that each use a different approach to
 give a way to quantify the optimum path through the graph given a cost and distraction value.
 Contains functions for greedy and recursive path movement.
 """
 
 __author__ = "8819989, Falk, 8746524, Hartmann"
-__version__ = "0.3"
+__version__ = "1.0"
 
 import heapq as hq
 
@@ -145,7 +145,7 @@ def opt_balanced(cost, distraction):
 
 def path_finder_dijkstra(graph, start, end, opt_func):
     """
-    Dijkstra path finder with two edge weights: c, d
+    Dijkstra pathfinder with two edge weights: c, d
     Uses a priority queue to explore the graph based on cumulative scores.
     Considers the total path score using the provided optimization function.
 
@@ -207,7 +207,7 @@ def path_finder_dijkstra(graph, start, end, opt_func):
             edge_score = opt_func(c, d)
             new_score = current_score + edge_score
 
-            # Dijksta cannot handle negative weights
+            # Dijkstra cannot handle negative weights
             if new_score < 0:
                 break     # Results in invalid path if negative weights occur
 

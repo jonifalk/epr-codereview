@@ -2,11 +2,11 @@
 This module uses the modules in pathfinder to create a random graph.
 This graph has given number of nodes and a random number of cost and distraction values.
 It also uses the timeit functionality to measure the time it takes in ms
-to run a greedy or recursive algorithm for the given graph.
+to run a greedy, dijkstra and recursive algorithm for the given graph.
 """
 
 __author__ = "8819989, Falk, 8746524, Hartmann"
-__version__ = "0.3"
+__version__ = "1.0"
 
 # Import Section
 import timeit
@@ -18,14 +18,14 @@ from pathfinder import opt_balanced as optimum
 
 
 # Assuming the main logic is saved as pathfinder.py in the same directory.
-# Takes the functions path_finder_greedy and path_finder_recursive
+# Takes the functions path_finder_greedy, path_finder_dijkstra and path_finder_recursive
 # Optimum linear path taken as logic, can be theoretically switched
-# with the other two Optimizations
+# with the other Optimizations
 
 
 # Generates a random graph which can then be traversed.
 # Change num_nodes for the total number of nodes in the graph.
-# Change probability to
+# Change probability to change how the nodes are generated in the graph.
 def generate_random_graph(num_nodes=15, probability=0.3):
     """
     Generates a directed graph with random weights.
@@ -55,7 +55,7 @@ def run_timing_comparison():
         time recursive : average recursive
     """
     # Setup Data
-    # Keep graph small (15 nodes) because Recursive will take way to long.
+    # Keep graph small (12 nodes) because Recursive will take way to long.
     # Any Node number over 16 causes the programm to take a very long time.
     node_count = 12
     graph = generate_random_graph(num_nodes=node_count, probability=0.4)
