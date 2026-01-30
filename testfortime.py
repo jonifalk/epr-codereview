@@ -56,7 +56,7 @@ def run_timing_comparison():
     """
     # Setup Data
     # Keep graph small (12 nodes) because Recursive will take way to long.
-    # Any Node number over 16 causes the programm to take a very long time.
+    # Any Node number over 16 causes the program to take a very long time.
     node_count = 12
     graph = generate_random_graph(num_nodes=node_count, probability=0.4)
     start_node = '0'
@@ -101,8 +101,8 @@ def run_timing_comparison():
     print(f"Recursive Average Time: {avg_recursive:.4f} ms")
 
     if avg_greedy > 0:
-        ratio = avg_recursive / avg_greedy
-        print(f"\nRecursive was approx {ratio:.1f}x slower than Greedy.")
+        ratio = avg_dijkstra / avg_greedy
+        print(f"\nRecursive was approx {ratio:.1f}x slower than Dijkstra.")
 
     # Verification of Path Quality (Single run)
     g_res = greedy(graph, start_node, end_node, optimum)
